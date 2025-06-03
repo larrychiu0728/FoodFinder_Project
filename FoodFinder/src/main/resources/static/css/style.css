@@ -1,0 +1,145 @@
+.searchForm {
+  background-color: orange;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px; /* 元素間距 */
+  font-size: 18px; /* 整體字體變大 */
+  justify-content: center; /* 置中對齊 */
+}
+
+/* 搜尋欄寬度與字體 */
+.searchForm select {
+  font-size: 20px;
+  padding: 6px 10px;
+}
+
+.type-group {
+  display: flex;
+  align-items: center;
+  border: 2px solid #555;
+  border-radius: 6px;
+  padding: 6px 10px;
+  background-color: white;
+  gap: 8px; /* 標籤與下拉選單之間留點空隙 */
+}
+
+/* 內部字體稍微放大 */
+.type-group label,
+.type-group select {
+  font-size: 16px;
+}
+
+/* 搜尋按鈕與清除按鈕風格一致 */
+.searchForm button {
+  font-size: 16px;
+  padding: 6px 12px;
+  background-color: white;
+  border: 1px solid #333;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.searchForm button:hover {
+  background-color: #eee;
+}
+
+table {
+    border-collapse: collapse;
+    width: 80%;
+    font-family: Arial, sans-serif;
+    margin: 0 auto;             /* 水平置中 */
+}
+
+th, td {
+    border: 1px solid #969696;
+    padding: 8px;
+    text-align: center;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+/* 滑過去亮一下 */
+tr:hover {
+  background-color: #f0f8ff; /* 淺藍色 */
+  cursor: pointer;
+}
+
+/* 被選中的 row */
+.selected {
+  background-color: #ffe58a !important; /* 淺黃色 */
+}
+
+#container {
+  display: flex;
+  flex-direction: column;
+}
+
+.top {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+}
+
+.divider {
+  margin: 10px 0;
+}
+
+.bottom {
+  display: flex;
+  height: 400px;
+}
+
+.left-map {
+  flex: 1;
+  border: 1px solid red;
+}
+
+.right-image {
+  width: 50%;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.right-image img {
+  border: 2px solid blue;
+  width: 50%;
+  height: 100%;
+  object-fit: contain; /* 確保圖片不會變形 */
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.note-editor {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid #aaa;
+  padding: 1em;
+  z-index: 1000;
+  box-shadow: 0 0 10px #999;
+  border-radius: 10px;
+}
+.note-editor-box h3 {
+  margin-top: 0;
+}
+.note-editor .actions {
+  margin-top: 0.5em;
+  display: flex;
+  justify-content: space-between;
+}

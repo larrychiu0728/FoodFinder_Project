@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>餐廳查詢</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="container">
+  <form class="searchForm">
+    <div class="type-group">
+      <label for="type">類別:</label>
+      <select id="type" v-model="searchForm.type">
+        <option value="">請選擇</option>
+        <option v-for="type in typeList" :value="type.id" :key="type.id">
+          {{ type.name }}
+        </option> 
+      </select>
+
+      <label>分數篩選：</label>
+      <select v-model="searchForm.scoreRange">
+        <option value="">全部</option>
+        <option v-for="option in scoreRangeOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+
+    <button type="button" @click="handleSearchButtonClick">搜尋</button>
+    <button type="button" @click="clear">清除</button>
+  </form>
+
+  <div class="top">
+    <table v-if="restaurantList.length > 0">
+      <thead>
+      <tr>
+        <th>名字</th>
+        <th>類別</th>
+        <th>地址</th>
+        <th>分數</th>
+        <th>備註</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr v-for="restaurant in restaurantList" :key="restaurant.id" 
+            @click="select(restaurant)" :class="{ selected: selected && selected.id === restaurant.id }">
+        <td>{{ restaurant.name }}</td>
+        <td>{{ restaurant.type.name }}</td>
+        <td>{{ restaurant.address }}</td>
+        <td>{{ restaurant.rating }}</td>
+        <td @dblclick="openNoteEditor(restaurant)">
+          {{ restaurant.note || '（無）' }}
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <p v-else style="margin-top: 1em;">🔍 查無資料</p>
+    <div class="pagination-container">
+      <button @click="currentPage--" :disabled="currentPage <= 1">上一頁</button>
+      <span>第 {{ currentPage }} 頁</span>
+      <button @click="currentPage++" :disabled="currentPage * pageSize >= totalItems">下一頁</button>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="bottom">
+    <div class="left-map" v-if="selected">
+    <iframe
+      width="100%"
+      height="100%"
+      :src="'https://www.google.com/maps?q=' + encodeURIComponent(selected.address) + '&output=embed'"
+      frameborder="0"
+    ></iframe>
+  </div>
+    <div class="right-image" v-if="selected">
+      <img
+        v-for="image in restaurantImages"
+        :key="image.id"
+        :src="'/images/' + image.imageUrl"
+        alt="餐廳圖片"
+      />
+    </div>
+  </div>
+
+  <div v-if="editingNoteRestaurant" class="note-editor">
+    <div class="note-editor-box">
+      <h3>編輯備註</h3>
+      <textarea v-model="editingNoteText" rows="4" cols="40"></textarea>
+      <div class="actions">
+        <button @click="saveNote">💾 保存</button>
+        <button @click="cancelNoteEdit">❌ 取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type="module">
+  import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+
+  createApp({
+    data() {
+      return {
+        searchForm: {
+          type: '',
+          scoreRange: ''
+        },
+        scoreRangeOptions: [
+          { label: '3.0 ~ 3.4', value: '3.0-3.4' },
+          { label: '3.5 ~ 3.9', value: '3.5-3.9' },
+          { label: '4.0 ~ 4.4', value: '4.0-4.4' },
+          { label: '4.5 ~ 5.0', value: '4.5-5.0' }
+        ],
+        restaurantList: [],
+        typeList: [],
+        selected: null,
+        restaurantImages: [],
+        currentPage: 1,
+        pageSize: 5,
+        totalItems: 0,
+        editingNoteRestaurant: null,
+        editingNoteText: ''
+      };
+    },
+    methods: {
+      async doSearch() {
+        const params = {
+          page: this.currentPage - 1, // Spring 頁數從 0 開始
+          size: this.pageSize,
+        };
+        if (this.searchForm.type) {
+          params.typeId = this.searchForm.type;
+        }
+
+        if (this.searchForm.scoreRange) {
+          const [min, max] = this.searchForm.scoreRange.split('-');
+          params.minScore = parseFloat(min);
+          params.maxScore = parseFloat(max);
+        }
+
+        try {
+          const result = await axios.get('/lists', { params });
+
+          this.restaurantList = result.data.content; // Page 的資料在 content 裡
+          this.totalItems = result.data.totalElements;
+
+          if (this.restaurantList.length > 0) {
+            this.select(this.restaurantList[0]);
+          }
+        } catch (error) {
+          console.error('查詢失敗：', error);
+          this.restaurantList = [];
+        }
+      },
+      async loadTypes() {
+        try {
+          const result = await axios.get('/types');
+          this.typeList = result.data; // 假設後端回傳陣列 [{id, type, name}]
+        } catch (error) {
+          console.error('讀取類別失敗', error);
+        }
+      },
+      clear() {
+        this.searchForm.type = '';
+        this.searchForm.scoreRange = '';
+        this.restaurantList = [];
+      },
+      async select(restaurant) {
+        this.selected = restaurant;
+
+        try {
+          const res = await axios.get('/images', {
+            params: { restaurantId: restaurant.id }
+          });
+          this.restaurantImages = res.data;
+        } catch (error) {
+          console.error('讀取圖片失敗', error);
+          this.restaurantImages = [];
+        }
+      },
+      handleSearchButtonClick() {
+        if (this.currentPage !== 1) {
+          this.currentPage = 1; // 會觸發 watch → doSearch()
+        } else {
+          this.doSearch(); // 目前在第 1 頁，watch 不會動，所以自己 call
+        }
+      },
+      openNoteEditor(restaurant) {
+        this.editingNoteRestaurant = restaurant;
+        this.editingNoteText = restaurant.note || '';
+      },
+      cancelNoteEdit() {
+        this.editingNoteRestaurant = null;
+        this.editingNoteText = '';
+      },
+      async saveNote() {
+        const restaurant = this.editingNoteRestaurant;
+        try {
+          await axios.put(`/restaurant/${restaurant.id}/note`, {
+            note: this.editingNoteText
+          });
+          // 更新畫面
+          restaurant.note = this.editingNoteText;
+        } catch (err) {
+          console.error('儲存失敗', err);
+        } finally {
+          this.editingNoteRestaurant = null;
+          this.editingNoteText = '';
+        }
+      }
+    },
+    watch: {
+      currentPage() {
+        this.doSearch();
+      }
+    },
+    mounted() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const typeFromUrl = urlParams.get('typeId');
+      if (typeFromUrl) {
+        this.searchForm.type = parseInt(typeFromUrl);
+      }
+      this.loadTypes();  // 抓下拉選單的資料
+      this.doSearch();
+    }
+  }).mount('#container');
+</script>
+</body>
+</html>
