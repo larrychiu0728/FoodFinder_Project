@@ -21,7 +21,9 @@ public class RestaurantListController {
     private final RestaurantService restaurantService;
 
     @Autowired
-    public RestaurantListController(RestaurantService restaurantService) { this.restaurantService = restaurantService; }
+    public RestaurantListController(RestaurantService restaurantService) {
+        this.restaurantService = restaurantService;
+    }
 
     @GetMapping("/lists")
     public Page<Restaurant> list(
